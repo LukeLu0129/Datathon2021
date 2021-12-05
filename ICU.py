@@ -164,25 +164,34 @@ keyword = st.sidebar.text_input('Enter keyword to search in clinical notes: ')
 
 
 ### concat all notes from SparkNLP
-P_Note = All_Note.query("subject_id == @sub_ID")
-R_Note = Radio_Note.query("subject_id == @sub_ID")
-D_Note = Discharge_Note.query("subject_id == @sub_ID")
-N_Note = Nurse_Note.query("subject_id == @sub_ID")
+# P_Note = All_Note.query(f'subject_id == "{id}"')
+R_Note = Radio_Note.query(f'subject_id == "{sub_ID}"')
+D_Note = Discharge_Note.query(f'subject_id == "{sub_ID}"')
+N_Note = Nurse_Note.query(f'subject_id == "{sub_ID}"')
 Notes = pd.concat([R_Note, D_Note, N_Note])
 ### search Note with regex based on chunk result
-FoundNotes = Notes[Notes.chunk.str.contains(keyword, regex=True)]
-try:
-    Asrt = st.sidebar.multiselect('Select filters based on "assetion": ', getAllOption(FoundNotes.assertion),['Confirmed', 'Present'])
+if keyword:
+    FoundNotes = Notes[Notes.chunk.str.contains(keyword, regex=True)]
+else:
+    FoundNotes = Notes
+AsrtDefault = ['Confirmed', 'Present']
+if not FoundNotes.assertion.empty:
+    Asrt = st.sidebar.multiselect('Select filters based on "assetion": ', getAllOption(FoundNotes.assertion))
+    if Asrt:
+        FoundNotes = FoundNotes.query('assertion in @Asrt')
+if not FoundNotes.ner_label.empty:
     ner = st.sidebar.multiselect('Select filters based on "ner_label": ', getAllOption(FoundNotes.ner_label))
     if ner:
         FoundNotes = FoundNotes.query('ner_label in @ner')
-    if Asrt:
-        FoundNotes = FoundNotes.query('assertion in @Asrt')
-except:
-    st.warning('No assertion or ner_label found in DF column')
-NoteID = st.sidebar.selectbox('Select a Note ID to view full note',getAllOption(FoundNotes.notes_id))
-if st.sidebar.button("Show FoundNote dataframe"):
+
+if st.sidebar.button("Show SparkNLP result"):
     st.dataframe(FoundNotes, width=5000,height=5000)
 
-st.text(All_Note.query(f'notes_id== "{NoteID}"').notes_text.values[0])
+if not FoundNotes.notes_id.empty:
+    NoteID = st.sidebar.selectbox('Select a Note ID to view full note',getAllOption(FoundNotes.notes_id))
+    st.text(All_Note.query(f'notes_id== "{NoteID}"').notes_text.values[0])
+
+
+
+
 
