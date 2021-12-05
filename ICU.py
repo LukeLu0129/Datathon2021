@@ -160,8 +160,8 @@ All_Note = pd.read_parquet(NoteFile_dir)
 ### steamlit web app design
 st.sidebar.header('Clinical note search \n (powered by SparkNLP)')
 sub_ID = st.sidebar.text_input("Enter the subject ID:")
-keyword = st.sidebar.text_input('Enter keyword to search in clinical notes: ')
 
+keyword = st.sidebar.text_input('Enter keyword to search in clinical notes: ')
 
 ### concat all notes from SparkNLP
 # P_Note = All_Note.query(f'subject_id == "{id}"')
@@ -191,7 +191,8 @@ if not FoundNotes.notes_id.empty:
     NoteID = st.sidebar.selectbox('Select a Note ID to view full note',getAllOption(FoundNotes.notes_id))
     st.text(All_Note.query(f'notes_id== "{NoteID}"').notes_text.values[0])
 
-
+if st.sidebar.button('test'):
+    st.dataframe(All_Note)
 
 
 
