@@ -1,1 +1,4 @@
+<<<<<<< HEAD
 *.parquet filter=lfs diff=lfs merge=lfs -text
+=======
+>>>>>>> 18c446a52de742aaa5d88fb96256c20458cb468f
