@@ -157,25 +157,10 @@ Nurse_Note = pd.read_parquet(NurseFile_dir)
 Discharge_Note = pd.read_parquet(DischargeFile_dir)
 All_Note = pd.read_parquet(NoteFile_dir)
 
-### extract filter option from column in All_Note 
-# filterDict = dd(str)
-# if not P_Note.empty:
-#     adm_id = st.sidebar.selectbox("Filter with admission ID: ", getAllOption(P_Note.admission_id))
-#     P_Note = P_Note.query('admission_id == @adm_id')
-#     c_date = st.sidebar.selectbox("Filter with chart date ID: ", getAllOption(P_Note.chart_date))
-#     P_Note = P_Note.query('chart_date == @c_date')
-#     n_cat = st.sidebar.selectbox("Filter with note category ID: ", getAllOption(P_Note.notes_category))
-#     P_Note = P_Note.query('notes_category == @n_cat')
-#     n_descrip = st.sidebar.selectbox("Filter with note description ID: ", getAllOption(P_Note.notes_description))
-#     P_Note = P_Note.query('notes_description == @n_descrip')
-
 ### steamlit web app design
 st.sidebar.header('Clinical note search \n (powered by SparkNLP)')
 sub_ID = st.sidebar.text_input("Enter the subject ID:")
 keyword = st.sidebar.text_input('Enter keyword to search in clinical notes: ')
-
-### advance setting
-
 
 
 ### concat all notes from SparkNLP
@@ -186,28 +171,18 @@ N_Note = Nurse_Note.query("subject_id == @sub_ID")
 Notes = pd.concat([R_Note, D_Note, N_Note])
 ### search Note with regex based on chunk result
 FoundNotes = Notes[Notes.chunk.str.contains(keyword, regex=True)]
-
-Asrt = st.sidebar.multiselect('Select filters based on "assetion": ', getAllOption(FoundNotes.assertion),['Confirmed', 'Present'])
-ner = st.sidebar.multiselect('Select filters based on "ner_label": ', getAllOption(FoundNotes.ner_label))
-if ner:
-    FoundNotes = FoundNotes.query('ner_label in @ner')
-if Asrt:
-    FoundNotes = FoundNotes.query('assertion in @Asrt')
+try:
+    Asrt = st.sidebar.multiselect('Select filters based on "assetion": ', getAllOption(FoundNotes.assertion),['Confirmed', 'Present'])
+    ner = st.sidebar.multiselect('Select filters based on "ner_label": ', getAllOption(FoundNotes.ner_label))
+    if ner:
+        FoundNotes = FoundNotes.query('ner_label in @ner')
+    if Asrt:
+        FoundNotes = FoundNotes.query('assertion in @Asrt')
+except:
+    st.warning('No assertion or ner_label found in DF column')
 NoteID = st.sidebar.selectbox('Select a Note ID to view full note',getAllOption(FoundNotes.notes_id))
 if st.sidebar.button("Show FoundNote dataframe"):
     st.dataframe(FoundNotes, width=5000,height=5000)
-else:
-    st.pl
-    st.text(All_Note.query(f'notes_id== "{NoteID}"').notes_text.values[0])
 
+st.text(All_Note.query(f'notes_id== "{NoteID}"').notes_text.values[0])
 
-# 
-# admID = st.sidebar.text_input("Enter an admission ID")
-# kw = st.sidebar.text_input("Enter keyword to search in radiology related ")
-# A = Radio_Note.query(f'admission_id == "{admID}"').query('assertion == "Confirmed"').query('chunk==@kw').notes_id
-# # st.dataframe(Patient.findDataInFile(filename), width=5000)
-# # st.dataframe(A, width=5000)
-# if not A.empty:
-#     note_id = st.sidebar.selectbox(f'{kw} is found in the notes list, select a note ID to see full notes', sorted(set(A)))
-    
-#     st.text(All_Note.query(f'notes_id== "{note_id}"').notes_text.values[0])
